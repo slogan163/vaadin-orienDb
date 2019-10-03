@@ -1,0 +1,29 @@
+.grid-container {
+    display: grid;
+    grid-template-areas: "header" "fieldBox" "buttonBox";
+    max-width: 768px;
+}
+
+.header {
+    grid-area: header;
+    flex: 1;
+}
+
+.fieldBox {
+    grid-area: fieldBox;
+    flex: 1;
+}
+
+.fieldBox > * {
+    width: 100%;
+}
+
+.buttonBox {
+    grid-area: buttonBox;
+    width: 100%;
+    display: grid;
+}
+
+vaadin-button {
+    flex: 1;
+}
