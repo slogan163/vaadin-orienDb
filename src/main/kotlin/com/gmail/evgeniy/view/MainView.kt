@@ -1,9 +1,10 @@
 package com.gmail.evgeniy.view
 
-import com.gmail.evgeniy.backend.BackendService
+import com.gmail.evgeniy.backend.BackendServiceOrientDb
 import com.gmail.evgeniy.backend.Patient
 import com.vaadin.flow.component.UI
 import com.vaadin.flow.component.button.Button
+import com.vaadin.flow.component.dependency.CssImport
 import com.vaadin.flow.component.html.Div
 import com.vaadin.flow.component.html.H1
 import com.vaadin.flow.component.notification.Notification
@@ -21,13 +22,14 @@ import com.vaadin.flow.theme.Theme
 import com.vaadin.flow.theme.lumo.Lumo
 import java.util.*
 
+
 /**
  * The main view contains a button and a click listener.
  */
 @Route("patient")
 @PWA(name = "Test", shortName = "Test", startPath = "patient/")
 @Theme(value = Lumo::class, variant = Lumo.LIGHT)
-//@CssImport("styles/main.css")
+@CssImport("styles/main.css")
 class MainView : VerticalLayout(), HasUrlParameter<String> {
 
     private val header = H1("Форма")
@@ -48,15 +50,15 @@ class MainView : VerticalLayout(), HasUrlParameter<String> {
 
         header.classNames.add("header")
         fieldBox.add(firstName, lastName, midName, email, notes)
-//        fieldBox.addClassName("fieldBox")
+        fieldBox.addClassName("fieldBox")
 
         buttonsBox.add(save, cancel)
         buttonsBox.addClassName("buttonBox")
         add(header, fieldBox, buttonsBox)
-//        addClassName("grid-container")
+        addClassName("grid-container")
 
         binder.bindInstanceFields(this)
-        save.addClickListener { BackendService.save(binder.bean) }
+        save.addClickListener { BackendServiceOrientDb.save(binder.bean) }
     }
 
     override fun setParameter(event: BeforeEvent, @OptionalParameter parameter: String?) {
@@ -80,6 +82,6 @@ class MainView : VerticalLayout(), HasUrlParameter<String> {
 
     private fun bindPatientId(patientId: String) {
         val id = UUID.fromString(patientId)
-        binder.bean = BackendService.load(id)
+        binder.bean = BackendServiceOrientDb.load(id)
     }
 }

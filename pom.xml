@@ -16,6 +16,8 @@
         <vaadin.version>14.0.7</vaadin.version>
         <kotlin.version>1.3.41</kotlin.version>
         <drivers.downloader.phase>pre-integration-test</drivers.downloader.phase>
+<!--        <orientdb.version>3.0.23</orientdb.version>-->
+        <orientdb.version>2.2.7</orientdb.version>
     </properties>
 
     <repositories>
@@ -98,6 +100,16 @@
             <artifactId>kotlin-stdlib</artifactId>
             <version>${kotlin.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.orientechnologies</groupId>
+            <artifactId>orientdb-core</artifactId>
+            <version>${orientdb.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.orientechnologies</groupId>
+            <artifactId>orientdb-object</artifactId>
+            <version>${orientdb.version}</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -130,6 +142,24 @@
                         </configuration>
                     </execution>
                 </executions>
+                <configuration>
+                    <compilerPlugins>
+                        <!-- Или укажите "spring" для поддержки Spring -->
+                        <plugin>all-open</plugin>
+                    </compilerPlugins>
+
+                    <pluginOptions>
+                        <!-- Каждая аннотация размещена на отдельной строке -->
+                        <option>all-open:annotation=com.gmail.evgeniy.annotation.AllOpen</option>
+                    </pluginOptions>
+                </configuration>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.jetbrains.kotlin</groupId>
+                        <artifactId>kotlin-maven-allopen</artifactId>
+                        <version>${kotlin.version}</version>
+                    </dependency>
+                </dependencies>
             </plugin>
             <!-- Jetty plugin for easy testing without a server -->
             <plugin>

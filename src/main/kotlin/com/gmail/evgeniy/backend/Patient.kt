@@ -1,23 +1,31 @@
 package com.gmail.evgeniy.backend
 
-import java.util.*
+import com.gmail.evgeniy.annotation.AllOpen
 
-data class Patient(val id: UUID = UUID.randomUUID(),
-                   var firstName: String,
-                   var lastName: String,
-                   var midName: String? = null,
-                   var title: String? = null,
-                   var email: String? = null,
-                   var notes: String? = null) {
+@AllOpen
+class Patient() {
+
+    var specialId: String = ""
+    var firstName: String = ""
+    var lastName: String = ""
+    var hospital: Hospital? = null
+    var midName: String? = null
+    var title: String? = null
+    var email: String? = null
+    var notes: String? = null
+
+    init {
+
+    }
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other?.javaClass != javaClass) return false
 
-        return this.id == (other as Patient).id
+        return this.specialId == (other as Patient).specialId
     }
 
     override fun hashCode(): Int {
-        return this.id.hashCode()
+        return this.specialId.hashCode()
     }
 }
