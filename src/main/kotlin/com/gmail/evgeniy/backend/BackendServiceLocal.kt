@@ -1,9 +1,17 @@
 package com.gmail.evgeniy.backend
 
+import com.gmail.evgeniy.entity.Hospital
 import com.gmail.evgeniy.entity.Patient
 
 
 object BackendServiceLocal : BackendService {
+    override fun loadHospital(name: String): Hospital? {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun saveHospital(hospital: Hospital) {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
 
     private val patients = mutableSetOf<Patient>()
 

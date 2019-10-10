@@ -1,5 +1,6 @@
 package com.gmail.evgeniy.backend
 
+import com.gmail.evgeniy.entity.Hospital
 import com.gmail.evgeniy.entity.Patient
 import com.orientechnologies.orient.`object`.db.OObjectDatabaseTx
 import com.orientechnologies.orient.core.db.OPartitionedDatabasePool
@@ -13,7 +14,7 @@ object BackendServiceOrientDb : BackendService {
     private val pool: OPartitionedDatabasePool
 
     init {
-        val databases ="C:\\Users\\sloga\\Downloads\\my-starter-project\\databases"
+        val databases = "C:\\Users\\sloga\\Downloads\\my-starter-project\\databases"
         pool = OPartitionedDatabasePool("plocal:${databases}", "admin", "admin")
 
         OObjectDatabaseTx(pool.acquire()).use { db ->
@@ -45,7 +46,25 @@ object BackendServiceOrientDb : BackendService {
             patient.midName = proxy.midName
             patient.email = proxy.email
             patient.notes = proxy.notes
+            if (proxy.hospital != null) {
+                patient.hospital = Hospital()
+                patient.hospital?.rid = proxy.hospital?.rid
+                patient.hospital?.name = proxy.hospital!!.name
+            }
+
             return patient
+        }
+    }
+
+    override fun loadHospital(name: String): Hospital? {
+        OObjectDatabaseTx(pool.acquire().activateOnCurrentThread()).use {
+            return it.query<List<Hospital>>(OSQLSynchQuery<Hospital>("select from Hospital where name = ? "), name).firstOrNull()
+        }
+    }
+
+    override fun saveHospital(hospital: Hospital) {
+        OObjectDatabaseTx(pool.acquire().activateOnCurrentThread()).use {
+            it.attachAndSave<Patient>(hospital)
         }
     }
 }

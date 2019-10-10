@@ -1,6 +1,7 @@
 package com.gmail.evgeniy.view
 
 import com.gmail.evgeniy.backend.BackendServiceOrientDb
+import com.gmail.evgeniy.entity.Hospital
 import com.gmail.evgeniy.entity.Patient
 import com.vaadin.flow.component.UI
 import com.vaadin.flow.component.button.Button
@@ -19,6 +20,7 @@ import com.vaadin.flow.router.Route
 import com.vaadin.flow.server.PWA
 import com.vaadin.flow.theme.Theme
 import com.vaadin.flow.theme.lumo.Lumo
+import org.apache.commons.lang3.StringUtils
 
 
 /**
@@ -35,6 +37,7 @@ class MainView : VerticalLayout(), HasUrlParameter<String> {
     private val lastName = TextField("Фамилия")
     private val midName = TextField("Отчество")
     private val email = TextField("Эл. почта")
+    private val hospital = TextField("Название больницы")
     private val notes = TextArea("Записи")
     private val fieldBox = Div()
     private val buttonsBox = Div()
@@ -47,7 +50,7 @@ class MainView : VerticalLayout(), HasUrlParameter<String> {
         this.isSpacing = false
 
         header.classNames.add("header")
-        fieldBox.add(firstName, lastName, midName, email, notes)
+        fieldBox.add(firstName, lastName, midName, email, hospital, notes)
         fieldBox.addClassName("fieldBox")
 
         buttonsBox.add(save, cancel)
@@ -56,7 +59,7 @@ class MainView : VerticalLayout(), HasUrlParameter<String> {
         addClassName("grid-container")
 
         save.addClickListener {
-            if(patient == null){
+            if (patient == null) {
                 patient = Patient()
             }
 
@@ -65,6 +68,12 @@ class MainView : VerticalLayout(), HasUrlParameter<String> {
             patient?.midName = midName.value
             patient?.email = email.value
             patient?.notes = notes.value
+
+            if(StringUtils.isNotBlank(hospital.value)){
+                val loadedHosp = BackendServiceOrientDb.loadHospital(hospital.value) ?: Hospital()
+                loadedHosp.name = hospital.value
+                patient?.hospital = loadedHosp
+            }
 
             BackendServiceOrientDb.save(patient!!)
         }
@@ -96,6 +105,7 @@ class MainView : VerticalLayout(), HasUrlParameter<String> {
         lastName.value = patient?.lastName ?: ""
         midName.value = patient?.midName ?: ""
         email.value = patient?.email ?: ""
+        hospital.value = patient?.hospital?.name ?: ""
         notes.value = patient?.notes ?: ""
     }
 }
