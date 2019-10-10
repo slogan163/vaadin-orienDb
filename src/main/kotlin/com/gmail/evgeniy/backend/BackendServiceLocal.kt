@@ -1,6 +1,6 @@
 package com.gmail.evgeniy.backend
 
-import java.util.*
+import com.gmail.evgeniy.entity.Patient
 
 
 object BackendServiceLocal : BackendService {
@@ -22,7 +22,7 @@ object BackendServiceLocal : BackendService {
         patients.add(patient)
     }
 
-    override fun load(id: UUID): Patient {
-        return patients.firstOrNull { id.toString() == it.specialId } ?: throw RuntimeException("No patient with id: $id")
+    override fun load(id: String): Patient? {
+        return patients.firstOrNull { id == it.rid.toString() }
     }
 }

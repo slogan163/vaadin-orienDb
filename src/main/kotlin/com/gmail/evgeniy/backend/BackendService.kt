@@ -1,6 +1,6 @@
 package com.gmail.evgeniy.backend
 
-import java.util.*
+import com.gmail.evgeniy.entity.Patient
 
 interface BackendService {
 
@@ -8,5 +8,5 @@ interface BackendService {
 
     fun save(patient: Patient)
 
-    fun load(id: UUID): Patient
+    fun load(id: String): Patient?
 }
