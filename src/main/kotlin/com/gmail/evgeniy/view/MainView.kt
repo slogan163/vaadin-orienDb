@@ -1,7 +1,6 @@
 package com.gmail.evgeniy.view
 
-import com.gmail.evgeniy.backend.BackendServiceOrientDb
-import com.gmail.evgeniy.entity.Hospital
+import com.gmail.evgeniy.backend.RestClient
 import com.gmail.evgeniy.entity.Patient
 import com.vaadin.flow.component.UI
 import com.vaadin.flow.component.button.Button
@@ -20,7 +19,7 @@ import com.vaadin.flow.router.Route
 import com.vaadin.flow.server.PWA
 import com.vaadin.flow.theme.Theme
 import com.vaadin.flow.theme.lumo.Lumo
-import org.apache.commons.lang3.StringUtils
+import kotlinx.coroutines.runBlocking
 
 
 /**
@@ -37,7 +36,6 @@ class MainView : VerticalLayout(), HasUrlParameter<String> {
     private val lastName = TextField("Фамилия")
     private val midName = TextField("Отчество")
     private val email = TextField("Эл. почта")
-    private val hospital = TextField("Название больницы")
     private val notes = TextArea("Записи")
     private val fieldBox = Div()
     private val buttonsBox = Div()
@@ -50,7 +48,7 @@ class MainView : VerticalLayout(), HasUrlParameter<String> {
         this.isSpacing = false
 
         header.classNames.add("header")
-        fieldBox.add(firstName, lastName, midName, email, hospital, notes)
+        fieldBox.add(firstName, lastName, midName, email, notes)
         fieldBox.addClassName("fieldBox")
 
         buttonsBox.add(save, cancel)
@@ -69,20 +67,16 @@ class MainView : VerticalLayout(), HasUrlParameter<String> {
             patient?.email = email.value
             patient?.notes = notes.value
 
-            if(StringUtils.isNotBlank(hospital.value)){
-                val loadedHosp = BackendServiceOrientDb.loadHospital(hospital.value) ?: Hospital()
-                loadedHosp.name = hospital.value
-                patient?.hospital = loadedHosp
+            runBlocking{
+                RestClient.save(patient!!)
             }
-
-            BackendServiceOrientDb.save(patient!!)
         }
     }
 
     override fun setParameter(event: BeforeEvent, @OptionalParameter parameter: String?) {
         if (parameter != null) {
-            loadPatient("#$parameter")
-            storePatientId(UI.getCurrent().page, "#$parameter")
+            loadPatient(parameter)
+            storePatientId(UI.getCurrent().page, parameter)
         } else {
             loadPatientId(UI.getCurrent().page)
             Notification.show("No parameter")
@@ -99,13 +93,15 @@ class MainView : VerticalLayout(), HasUrlParameter<String> {
     }
 
     private fun loadPatient(patientId: String) {
-        patient = BackendServiceOrientDb.load(patientId)
+        runBlocking {
+            patient = RestClient.load(patientId)
 
-        firstName.value = patient?.firstName ?: ""
-        lastName.value = patient?.lastName ?: ""
-        midName.value = patient?.midName ?: ""
-        email.value = patient?.email ?: ""
-        hospital.value = patient?.hospital?.name ?: ""
-        notes.value = patient?.notes ?: ""
+            firstName.value = patient?.firstName ?: ""
+            lastName.value = patient?.lastName ?: ""
+            midName.value = patient?.midName ?: ""
+            email.value = patient?.email ?: ""
+            notes.value = patient?.notes ?: ""
+        }
+
     }
 }

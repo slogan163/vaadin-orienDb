@@ -5,6 +5,7 @@ import com.gmail.evgeniy.entity.Patient
 import com.orientechnologies.orient.`object`.db.OObjectDatabaseTx
 import com.orientechnologies.orient.core.db.OPartitionedDatabasePool
 import com.orientechnologies.orient.core.id.ORecordId
+import com.orientechnologies.orient.core.query.OQuery
 import com.orientechnologies.orient.core.sql.query.OSQLSynchQuery
 import java.util.stream.Collectors.toSet
 
@@ -25,7 +26,7 @@ object BackendServiceOrientDb : BackendService {
 
     override fun getEmployees(): Set<Patient> {
         OObjectDatabaseTx(pool.acquire().activateOnCurrentThread()).use {
-            return it.query<List<Patient>>(OSQLSynchQuery<Patient>("select from Patient")).stream().collect(toSet())
+            return it.query<List<Patient>>(OSQLSynchQuery<Patient>("select from Patient") as OQuery<*>?).stream().collect(toSet())
         }
     }
 
@@ -46,11 +47,6 @@ object BackendServiceOrientDb : BackendService {
             patient.midName = proxy.midName
             patient.email = proxy.email
             patient.notes = proxy.notes
-            if (proxy.hospital != null) {
-                patient.hospital = Hospital()
-                patient.hospital?.rid = proxy.hospital?.rid
-                patient.hospital?.name = proxy.hospital!!.name
-            }
 
             return patient
         }
