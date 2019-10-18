@@ -1,20 +1,19 @@
 package com.gmail.evgeniy.view
 
-import com.gmail.evgeniy.backend.RestClient
+import com.gmail.evgeniy.auth.AuthService
+import com.gmail.evgeniy.auth.TokenWorker
+import com.gmail.evgeniy.backend.BackendServiceLocal
 import com.gmail.evgeniy.entity.Patient
-import com.vaadin.flow.component.UI
 import com.vaadin.flow.component.button.Button
+import com.vaadin.flow.component.datepicker.DatePicker
 import com.vaadin.flow.component.dependency.CssImport
 import com.vaadin.flow.component.html.Div
 import com.vaadin.flow.component.html.H1
-import com.vaadin.flow.component.notification.Notification
 import com.vaadin.flow.component.orderedlayout.VerticalLayout
-import com.vaadin.flow.component.page.Page
 import com.vaadin.flow.component.textfield.TextArea
 import com.vaadin.flow.component.textfield.TextField
-import com.vaadin.flow.router.BeforeEvent
-import com.vaadin.flow.router.HasUrlParameter
-import com.vaadin.flow.router.OptionalParameter
+import com.vaadin.flow.router.BeforeEnterEvent
+import com.vaadin.flow.router.BeforeEnterObserver
 import com.vaadin.flow.router.Route
 import com.vaadin.flow.server.PWA
 import com.vaadin.flow.theme.Theme
@@ -26,15 +25,16 @@ import kotlinx.coroutines.runBlocking
  * The main view contains a button and a click listener.
  */
 @Route("patient")
-@PWA(name = "Test", shortName = "Test", startPath = "patient/")
+@PWA(name = "Test", shortName = "Test", startPath = "view/patient")
 @Theme(value = Lumo::class, variant = Lumo.LIGHT)
 @CssImport("styles/main.css")
-class MainView : VerticalLayout(), HasUrlParameter<String> {
+class MainView : VerticalLayout(), BeforeEnterObserver {
 
     private val header = H1("Форма")
     private val firstName = TextField("Имя")
     private val lastName = TextField("Фамилия")
     private val midName = TextField("Отчество")
+    private val birthday = DatePicker("День рождения")
     private val email = TextField("Эл. почта")
     private val notes = TextArea("Записи")
     private val fieldBox = Div()
@@ -48,7 +48,7 @@ class MainView : VerticalLayout(), HasUrlParameter<String> {
         this.isSpacing = false
 
         header.classNames.add("header")
-        fieldBox.add(firstName, lastName, midName, email, notes)
+        fieldBox.add(firstName, lastName, midName, birthday, email, notes)
         fieldBox.addClassName("fieldBox")
 
         buttonsBox.add(save, cancel)
@@ -56,52 +56,38 @@ class MainView : VerticalLayout(), HasUrlParameter<String> {
         add(header, fieldBox, buttonsBox)
         addClassName("grid-container")
 
-        save.addClickListener {
-            if (patient == null) {
-                patient = Patient()
-            }
+        save.addClickListener { onSave() }
+    }
 
-            patient?.firstName = firstName.value
-            patient?.lastName = lastName.value
-            patient?.midName = midName.value
-            patient?.email = email.value
-            patient?.notes = notes.value
+    override fun beforeEnter(event: BeforeEnterEvent) {
+        TokenWorker.authorize(event.ui)
+        val token: String = event.ui.session.getAttribute("token") as String
+        val patientId: String = runBlocking { AuthService.getPatientId(token) }
+        loadPatient(patientId)
+    }
 
-            runBlocking{
-                RestClient.save(patient!!)
-            }
+    private fun onSave() {
+        if (patient == null) {
+            patient = Patient()
         }
-    }
 
-    override fun setParameter(event: BeforeEvent, @OptionalParameter parameter: String?) {
-        if (parameter != null) {
-            loadPatient(parameter)
-            storePatientId(UI.getCurrent().page, parameter)
-        } else {
-            loadPatientId(UI.getCurrent().page)
-            Notification.show("No parameter")
-        }
-    }
+        patient?.firstName = firstName.value
+        patient?.lastName = lastName.value
+        patient?.midName = midName.value
+        patient?.birthday = birthday.value
+        patient?.email = email.value
+        patient?.notes = notes.value
 
-    private fun storePatientId(page: Page, patientId: String) {
-        page.executeJs(String.format("localStorage.setItem('patientId', '%s')", patientId))
-    }
-
-    private fun loadPatientId(page: Page) {
-        page.executeJs("return localStorage.getItem('patientId')")
-                .then(String::class.java) { this.loadPatient(it) }
+        BackendServiceLocal.save(patient!!)
     }
 
     private fun loadPatient(patientId: String) {
-        runBlocking {
-            patient = RestClient.load(patientId)
-
-            firstName.value = patient?.firstName ?: ""
-            lastName.value = patient?.lastName ?: ""
-            midName.value = patient?.midName ?: ""
-            email.value = patient?.email ?: ""
-            notes.value = patient?.notes ?: ""
-        }
-
+        patient = BackendServiceLocal.load(patientId)
+        firstName.value = patient?.firstName ?: ""
+        lastName.value = patient?.lastName ?: ""
+        midName.value = patient?.midName ?: ""
+        birthday.value = patient?.birthday
+        email.value = patient?.email ?: ""
+        notes.value = patient?.notes ?: ""
     }
 }

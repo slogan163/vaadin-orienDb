@@ -7,6 +7,7 @@ import io.ktor.client.features.json.JacksonSerializer
 import io.ktor.client.features.json.JsonFeature
 import io.ktor.client.request.get
 import io.ktor.client.request.post
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 
@@ -38,14 +39,15 @@ object RestClient {
                 it.post<Unit>("$HOST/patient") {
                     body = json.write(patient)
                 }
-            }.await()
+            }.join()
         }
     }
 
-    suspend fun load(id: String): Patient? {
+    suspend fun load(id: String): Deferred<Patient> {
         val split = id.split(":")
+
         newClient().use {
-            return GlobalScope.async { it.get<Patient>("$HOST/patient?clusterId=${split[0]}&id=${split[1]}") }.await()
+            return GlobalScope.async { it.get<Patient>("$HOST/patient?clusterId=${split[0]}&id=${split[1]}") }
         }
     }
 }
