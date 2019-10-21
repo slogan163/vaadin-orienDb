@@ -4,6 +4,8 @@ import com.gmail.evgeniy.backend.BackendServiceLocal
 import com.gmail.evgeniy.entity.User
 import com.google.common.cache.Cache
 import com.google.common.cache.CacheBuilder
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -16,6 +18,7 @@ object AuthService {
 
     private val users = CopyOnWriteArrayList<User>()
     private val tokenCodeCache: Cache<String, String>
+    private var log: Logger = LoggerFactory.getLogger(AuthService::class.java)
 
     init {
         users.add(User("e87dc893-f6cf-478e-8d7b-30639ed70436", "111111", LocalDateTime.now().plusDays(1), true))
@@ -47,7 +50,9 @@ object AuthService {
         if (user == null) {
             users.add(User(patientId, newToken, LocalDateTime.now().plusDays(1), true))
         } else {
-            user.token = newToken
+            val newUser = user.copy(token = newToken)
+            users.add(newUser)
+            users.remove(user)
         }
         return newToken
     }
@@ -66,7 +71,7 @@ object AuthService {
 
         tokenCodeCache.put(token, code)
         //todo: sms send
-        println("new code $code for token $token")
+        log.error("new code $code for the token $token")
     }
 
     suspend fun checkPassword(token: String, code: String): Boolean {
@@ -78,7 +83,10 @@ object AuthService {
     }
 
     suspend fun updateToken(token: String) {
-        getUser(token).tokenExpirationTime = LocalDateTime.now().plusDays(2)
+        val oldUser = getUser(token)
+        val newUser = oldUser.copy(tokenExpirationTime = LocalDateTime.now().plusDays(2))
+        users.add(newUser)
+        users.remove(oldUser)
     }
 
 

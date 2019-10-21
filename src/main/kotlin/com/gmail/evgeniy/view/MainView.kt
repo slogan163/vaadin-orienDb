@@ -60,10 +60,11 @@ class MainView : VerticalLayout(), BeforeEnterObserver {
     }
 
     override fun beforeEnter(event: BeforeEnterEvent) {
-        TokenWorker.authorize(event.ui)
-        val token: String = event.ui.session.getAttribute("token") as String
-        val patientId: String = runBlocking { AuthService.getPatientId(token) }
-        loadPatient(patientId)
+        TokenWorker.authorize(event.ui) {
+            val token: String = event.ui.session.getAttribute("token") as String
+            val patientId: String = runBlocking { AuthService.getPatientId(token) }
+            loadPatient(patientId)
+        }
     }
 
     private fun onSave() {

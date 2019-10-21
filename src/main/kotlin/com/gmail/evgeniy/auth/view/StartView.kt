@@ -22,12 +22,15 @@ class StartView : VerticalLayout(), HasUrlParameter<String> {
 
     init {
         birthdayField.isRequired = true
+        birthdayField.width = "100%"
         errorLabel.isVisible = false
         errorLabel.addClassName("birthday-error")
 
         birthdayField.addValueChangeListener { e -> button.isEnabled = e.value != null }
         button.addClickListener { checkBirthday() }
+        button.width = "100%"
         add(birthdayField, errorLabel, button)
+        maxWidth = "768px"
     }
 
     override fun setParameter(event: BeforeEvent, token: String) {
@@ -37,6 +40,7 @@ class StartView : VerticalLayout(), HasUrlParameter<String> {
             if (runBlocking { AuthService.isTokenAlive(token) }) {
                 this@StartView.token = token
             } else {
+                runBlocking { AuthService.sendSmsForConfirmation(token) }
                 event.rerouteTo(SmsAuthorizationView::class.java)
             }
         } else {

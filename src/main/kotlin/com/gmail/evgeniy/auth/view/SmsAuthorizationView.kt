@@ -2,7 +2,6 @@ package com.gmail.evgeniy.auth.view
 
 import com.gmail.evgeniy.auth.AuthService
 import com.gmail.evgeniy.view.MainView
-import com.vaadin.flow.component.HasValue
 import com.vaadin.flow.component.button.Button
 import com.vaadin.flow.component.notification.Notification
 import com.vaadin.flow.component.orderedlayout.VerticalLayout
@@ -18,6 +17,7 @@ class SmsAuthorizationView : VerticalLayout(), BeforeEnterObserver {
 
     private val passwordField = PasswordField("Код подтверждения")
     private val resendLink = Button("Отправить еще раз")
+    private val confirmBtn = Button("Подтвердить")
 
     private lateinit var token: String
 
@@ -27,11 +27,17 @@ class SmsAuthorizationView : VerticalLayout(), BeforeEnterObserver {
         passwordField.isPreventInvalidInput = true
         passwordField.errorMessage = "Код не верный, попробуйте еще раз"
         passwordField.valueChangeMode = ValueChangeMode.TIMEOUT
-        passwordField.addValueChangeListener { onPasswordChanged(it) }
+        passwordField.width = "100%"
+//        passwordField.addValueChangeListener { onPasswordChanged(it.value) }
+        confirmBtn.addClickListener { onPasswordChanged(passwordField.value) }
+        confirmBtn.width = "100%"
 
         //todo: add style for resendLink
         resendLink.addClickListener { onResendClick() }
-        add(passwordField, resendLink)
+        resendLink.width = "100%"
+
+        add(passwordField, confirmBtn, resendLink)
+        maxWidth = "768px"
     }
 
     private fun onResendClick() {
@@ -39,10 +45,10 @@ class SmsAuthorizationView : VerticalLayout(), BeforeEnterObserver {
         Notification("смс отправлено", 3000).open()
     }
 
-    private fun onPasswordChanged(event: HasValue.ValueChangeEvent<String>) {
+    private fun onPasswordChanged(password: String) {
         passwordField.isInvalid = false
 
-        if (event.value.length == 4) {
+        if (password.length == 4) {
             if (runBlocking { AuthService.checkPassword(token, passwordField.value) }) {
                 runBlocking { AuthService.updateToken(token) }
                 ui.ifPresent { it.navigate(MainView::class.java) }

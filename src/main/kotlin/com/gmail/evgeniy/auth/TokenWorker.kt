@@ -6,20 +6,19 @@ import kotlinx.coroutines.runBlocking
 
 object TokenWorker {
 
-    fun authorize(ui: UI) {
-        //todo: get token from session
+    fun authorize(ui: UI, actionAfterAuth: () -> Unit) {
         val token: String? = ui.session.getAttribute("token") as String?
 
         if (token != null) {
-            processToken(token, ui)
+            processToken(token, ui, actionAfterAuth)
         } else {
             ui.page.executeJs("return localStorage.getItem('token')").then(String::class.java) { storageToken ->
-                processToken(storageToken, ui)
+                processToken(storageToken, ui, actionAfterAuth)
             }
         }
     }
 
-    private fun processToken(token: String?, ui: UI) {
+    private fun processToken(token: String?, ui: UI, actionAfterAuth: () -> Unit) {
         if (token.isNullOrEmpty() || runBlocking { !AuthService.isTokenExists(token) }) {
             throw AccessDeniedException("Пожалуйста зарегистррируйтесь ...")
         }
@@ -30,6 +29,8 @@ object TokenWorker {
         if (runBlocking { !AuthService.isTokenAlive(token) }) {
             runBlocking { AuthService.sendSmsForConfirmation(token) }
             ui.navigate(SmsAuthorizationView::class.java)
+        } else {
+            actionAfterAuth.invoke()
         }
     }
 }
