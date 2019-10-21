@@ -17,7 +17,7 @@ import kotlin.random.Random
 object AuthService {
 
     private val users = CopyOnWriteArrayList<User>()
-    private val tokenCodeCache: Cache<String, String>
+    private val tokenCodeCache: Cache<String, Pair<String, LocalDateTime>>
     private var log: Logger = LoggerFactory.getLogger(AuthService::class.java)
 
     init {
@@ -27,7 +27,7 @@ object AuthService {
 
         tokenCodeCache = CacheBuilder.newBuilder()
                 .expireAfterWrite(Duration.ofMinutes(5))
-                .build<String, String>()
+                .build<String, Pair<String, LocalDateTime>>()
     }
 
     private fun getUser(token: String): User {
@@ -66,16 +66,21 @@ object AuthService {
     }
 
     suspend fun sendSmsForConfirmation(token: String) {
+        val creationCodeTime: LocalDateTime? = tokenCodeCache.getIfPresent(token)?.second
+        if (creationCodeTime != null && creationCodeTime.plusSeconds(60) <= LocalDateTime.now()) {
+            throw TooOftenSendingException()
+        }
+
         val code = generateSequence { Random.nextInt(0, 9).toString() }
                 .take(4).fold("", { acc, s -> acc + s })
 
-        tokenCodeCache.put(token, code)
+        tokenCodeCache.put(token, Pair(code, LocalDateTime.now()))
         //todo: sms send
         log.error("new code $code for the token $token")
     }
 
     suspend fun checkPassword(token: String, code: String): Boolean {
-        val isCorrect = tokenCodeCache.getIfPresent(token) == code
+        val isCorrect = tokenCodeCache.getIfPresent(token)?.first == code
         if (isCorrect) {
             tokenCodeCache.invalidate(token)
         }

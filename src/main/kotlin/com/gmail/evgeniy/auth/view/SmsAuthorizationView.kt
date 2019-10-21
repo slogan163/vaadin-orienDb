@@ -1,6 +1,7 @@
 package com.gmail.evgeniy.auth.view
 
 import com.gmail.evgeniy.auth.AuthService
+import com.gmail.evgeniy.auth.TooOftenSendingException
 import com.gmail.evgeniy.view.MainView
 import com.vaadin.flow.component.button.Button
 import com.vaadin.flow.component.notification.Notification
@@ -35,14 +36,21 @@ class SmsAuthorizationView : VerticalLayout(), BeforeEnterObserver {
         //todo: add style for resendLink
         resendLink.addClickListener { onResendClick() }
         resendLink.width = "100%"
+        //todo: block the button for 60 seconds after resending a sms
 
         add(passwordField, confirmBtn, resendLink)
         maxWidth = "768px"
     }
 
     private fun onResendClick() {
-        runBlocking { AuthService.sendSmsForConfirmation(token) }
-        Notification("смс отправлено", 3000).open()
+        runBlocking {
+            try {
+                AuthService.sendSmsForConfirmation(token)
+                Notification("смс отправлено", 3000).open()
+            } catch (e: TooOftenSendingException) {
+                Notification("смс отправляется слишком часто, попробуйте через 60 секунд", 3000).open()
+            }
+        }
     }
 
     private fun onPasswordChanged(password: String) {
