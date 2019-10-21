@@ -6,7 +6,7 @@ import kotlinx.coroutines.runBlocking
 
 object TokenWorker {
 
-    fun authorize(ui: UI, actionAfterAuth: () -> Unit) {
+    fun authorize(ui: UI, actionAfterAuth: suspend () -> Unit) {
         val token: String? = ui.session.getAttribute("token") as String?
 
         if (token != null) {
@@ -18,19 +18,21 @@ object TokenWorker {
         }
     }
 
-    private fun processToken(token: String?, ui: UI, actionAfterAuth: () -> Unit) {
-        if (token.isNullOrEmpty() || runBlocking { !AuthService.isTokenExists(token) }) {
-            throw AccessDeniedException("Пожалуйста зарегистррируйтесь ...")
-        }
-        if (ui.session.getAttribute("token") == null) {
-            ui.session.setAttribute("token", token)
-        }
+    private fun processToken(token: String?, ui: UI, actionAfterAuth: suspend () -> Unit) {
+        runBlocking {
+            if (token.isNullOrEmpty() || !AuthService.isTokenExists(token)) {
+                throw AccessDeniedException("Пожалуйста зарегистррируйтесь ...")
+            }
+            if (ui.session.getAttribute("token") == null) {
+                ui.session.setAttribute("token", token)
+            }
 
-        if (runBlocking { !AuthService.isTokenAlive(token) }) {
-            runBlocking { AuthService.sendSmsForConfirmation(token) }
-            ui.navigate(SmsAuthorizationView::class.java)
-        } else {
-            actionAfterAuth.invoke()
+            if (!AuthService.isTokenAlive(token)) {
+                AuthService.sendSmsForConfirmation(token)
+                ui.navigate(SmsAuthorizationView::class.java)
+            } else {
+                actionAfterAuth.invoke()
+            }
         }
     }
 }

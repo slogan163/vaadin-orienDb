@@ -18,7 +18,6 @@ import com.vaadin.flow.router.Route
 import com.vaadin.flow.server.PWA
 import com.vaadin.flow.theme.Theme
 import com.vaadin.flow.theme.lumo.Lumo
-import kotlinx.coroutines.runBlocking
 
 
 /**
@@ -62,7 +61,7 @@ class MainView : VerticalLayout(), BeforeEnterObserver {
     override fun beforeEnter(event: BeforeEnterEvent) {
         TokenWorker.authorize(event.ui) {
             val token: String = event.ui.session.getAttribute("token") as String
-            val patientId: String = runBlocking { AuthService.getPatientId(token) }
+            val patientId: String = AuthService.getPatientId(token)
             loadPatient(patientId)
         }
     }

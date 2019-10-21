@@ -34,19 +34,20 @@ class StartView : VerticalLayout(), HasUrlParameter<String> {
     }
 
     override fun setParameter(event: BeforeEvent, token: String) {
-        if (runBlocking { AuthService.isTokenExists(token) }) {
-            event.ui.session.setAttribute("token", token)
+        runBlocking {
+            if (AuthService.isTokenExists(token)) {
+                event.ui.session.setAttribute("token", token)
 
-            if (runBlocking { AuthService.isTokenAlive(token) }) {
-                this@StartView.token = token
+                if (AuthService.isTokenAlive(token)) {
+                    this@StartView.token = token
+                } else {
+                    AuthService.sendSmsForConfirmation(token)
+                    event.rerouteTo(SmsAuthorizationView::class.java)
+                }
             } else {
-                runBlocking { AuthService.sendSmsForConfirmation(token) }
-                event.rerouteTo(SmsAuthorizationView::class.java)
+                throw AccessDeniedException("Невергая ссылка")
             }
-        } else {
-            throw AccessDeniedException("Невергая ссылка")
         }
-
     }
 
     private fun checkBirthday() {

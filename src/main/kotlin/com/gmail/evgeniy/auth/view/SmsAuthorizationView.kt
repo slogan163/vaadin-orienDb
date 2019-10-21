@@ -57,11 +57,13 @@ class SmsAuthorizationView : VerticalLayout(), BeforeEnterObserver {
         passwordField.isInvalid = false
 
         if (password.length == 4) {
-            if (runBlocking { AuthService.checkPassword(token, passwordField.value) }) {
-                runBlocking { AuthService.updateToken(token) }
-                ui.ifPresent { it.navigate(MainView::class.java) }
-            } else {
-                passwordField.isInvalid = true
+            runBlocking {
+                if (AuthService.checkPassword(token, passwordField.value)) {
+                    AuthService.updateToken(token)
+                    ui.ifPresent { it.navigate(MainView::class.java) }
+                } else {
+                    passwordField.isInvalid = true
+                }
             }
         }
     }
