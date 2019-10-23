@@ -1,24 +1,30 @@
 package com.gmail.evgeniy.auth.view
 
 import com.gmail.evgeniy.auth.AuthService
-import com.gmail.evgeniy.auth.TooOftenSendingException
+import com.gmail.evgeniy.auth.CustomException
+import com.gmail.evgeniy.auth.doAfterAccess
 import com.gmail.evgeniy.view.MainView
 import com.vaadin.flow.component.button.Button
 import com.vaadin.flow.component.notification.Notification
+import com.vaadin.flow.component.orderedlayout.FlexComponent
 import com.vaadin.flow.component.orderedlayout.VerticalLayout
+import com.vaadin.flow.component.page.Push
 import com.vaadin.flow.component.textfield.PasswordField
 import com.vaadin.flow.data.value.ValueChangeMode
 import com.vaadin.flow.router.BeforeEnterEvent
 import com.vaadin.flow.router.BeforeEnterObserver
 import com.vaadin.flow.router.Route
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 
+@Push
 @Route("smsAuthorization")
 class SmsAuthorizationView : VerticalLayout(), BeforeEnterObserver {
 
     private val passwordField = PasswordField("Код подтверждения")
     private val resendLink = Button("Отправить еще раз")
     private val confirmBtn = Button("Подтвердить")
+    private val wrapper = VerticalLayout()
 
     private lateinit var token: String
 
@@ -29,26 +35,27 @@ class SmsAuthorizationView : VerticalLayout(), BeforeEnterObserver {
         passwordField.errorMessage = "Код не верный, попробуйте еще раз"
         passwordField.valueChangeMode = ValueChangeMode.TIMEOUT
         passwordField.width = "100%"
-//        passwordField.addValueChangeListener { onPasswordChanged(it.value) }
         confirmBtn.addClickListener { onPasswordChanged(passwordField.value) }
         confirmBtn.width = "100%"
 
         //todo: add style for resendLink
         resendLink.addClickListener { onResendClick() }
         resendLink.width = "100%"
-        //todo: block the button for 60 seconds after resending a sms
 
-        add(passwordField, confirmBtn, resendLink)
-        maxWidth = "768px"
+        wrapper.add(passwordField, confirmBtn, resendLink)
+        wrapper.maxWidth = "768px"
+        add(wrapper)
+        justifyContentMode = FlexComponent.JustifyContentMode.CENTER
+        defaultHorizontalComponentAlignment = FlexComponent.Alignment.CENTER
     }
 
     private fun onResendClick() {
-        runBlocking {
+        GlobalScope.launch {
             try {
                 AuthService.sendSmsForConfirmation(token)
-                Notification("смс отправлено", 3000).open()
-            } catch (e: TooOftenSendingException) {
-                Notification("смс отправляется слишком часто, попробуйте через 60 секунд", 3000).open()
+                doAfterAccess(ui) { Notification("смс отправлено", 3000).open() }
+            } catch (e: CustomException) {
+                doAfterAccess(ui) { Notification(e.localizedMessage, 3000).open() }
             }
         }
     }
@@ -57,12 +64,12 @@ class SmsAuthorizationView : VerticalLayout(), BeforeEnterObserver {
         passwordField.isInvalid = false
 
         if (password.length == 4) {
-            runBlocking {
+            GlobalScope.launch {
                 if (AuthService.checkPassword(token, passwordField.value)) {
                     AuthService.updateToken(token)
-                    ui.ifPresent { it.navigate(MainView::class.java) }
+                    doAfterAccess(ui) { ui.get().navigate(MainView::class.java) }
                 } else {
-                    passwordField.isInvalid = true
+                    doAfterAccess(ui) { passwordField.isInvalid = true }
                 }
             }
         }

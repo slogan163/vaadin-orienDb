@@ -22,7 +22,7 @@ object AuthService {
 
     init {
         users.add(User("e87dc893-f6cf-478e-8d7b-30639ed70436", "111111", LocalDateTime.now().plusDays(1), true))
-        users.add(User("7489fdcd-a056-4447-9a3a-c6199c89288c", "222222", LocalDateTime.now().plusDays(1), false))
+        users.add(User("7489fdcd-a056-4447-9a3a-c6199c89288c", "222222", LocalDateTime.now().plusDays(1), true))
         users.add(User("bb18583e-af29-4f9c-94c6-037a08a47ee9", "333333", LocalDateTime.now().minusDays(1), true))
 
         tokenCodeCache = CacheBuilder.newBuilder()
@@ -67,8 +67,8 @@ object AuthService {
 
     suspend fun sendSmsForConfirmation(token: String) {
         val creationCodeTime: LocalDateTime? = tokenCodeCache.getIfPresent(token)?.second
-        if (creationCodeTime != null && creationCodeTime.plusSeconds(60) <= LocalDateTime.now()) {
-            throw TooOftenSendingException()
+        if (creationCodeTime != null && creationCodeTime.plusSeconds(60) >= LocalDateTime.now()) {
+            throw CustomException("смс отправляется слишком часто, попробуйте через 60 секунд")
         }
 
         val code = generateSequence { Random.nextInt(0, 9).toString() }
