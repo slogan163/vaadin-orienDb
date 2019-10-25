@@ -1,5 +1,6 @@
 package com.gmail.evgeniy.backend
 
+import com.gmail.evgeniy.auth.AccessDeniedException
 import com.gmail.evgeniy.entity.Hospital
 import com.gmail.evgeniy.entity.Patient
 import java.time.LocalDate
@@ -32,7 +33,8 @@ object BackendServiceLocal : BackendService {
         patients.add(patient)
     }
 
-    override fun load(id: String): Patient? {
-        return patients.firstOrNull { id == it.rid.toString() }
+    override fun load(id: String): Patient {
+        return patients.firstOrNull { id == it.rid }
+                ?: throw AccessDeniedException("Пользователя не существует в системе")
     }
 }

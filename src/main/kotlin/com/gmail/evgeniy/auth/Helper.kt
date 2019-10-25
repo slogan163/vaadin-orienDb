@@ -18,8 +18,8 @@ fun authorize(ui: UI, actionAfterAuth: suspend (token: String) -> Unit) {
     }
 }
 
-fun doAfterAccess(ui: Optional<UI>, action: () -> Unit) {
-    ui.orElse(null)?.access { action.invoke() }
+internal fun Optional<UI>.doAfterAccess(action: () -> Unit) {
+    orElse(null)?.access { action.invoke() }
 }
 
 private fun processToken(token: String?, ui: UI, actionAfterAuth: suspend (token: String) -> Unit) {

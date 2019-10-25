@@ -31,8 +31,7 @@ object AuthService {
     }
 
     private fun getUser(token: String): User {
-        return users.first { token == it.token }
-
+        return users.firstOrNull { token == it.token } ?: throw AccessDeniedException("Пользователя не существует в системе")
     }
 
     suspend fun isTokenExists(token: String): Boolean {
@@ -58,7 +57,7 @@ object AuthService {
     }
 
     suspend fun isCorrectBirthday(token: String, date: LocalDate): Boolean {
-        return BackendServiceLocal.load(getUser(token).patientId)?.birthday == date
+        return BackendServiceLocal.load(getUser(token).patientId).birthday == date
     }
 
     suspend fun getPatientId(token: String): String {

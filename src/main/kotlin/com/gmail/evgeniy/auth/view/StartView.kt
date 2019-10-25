@@ -69,7 +69,7 @@ class StartView : VerticalLayout(), HasUrlParameter<String> {
                 ui.orElse(null)?.page?.executeJs("localStorage.setItem('token', $token)")
                 ui.orElse(null)?.navigate(MainView::class.java)
             } else {
-                doAfterAccess(ui) { errorLabel.isVisible = true }
+                ui.doAfterAccess { errorLabel.isVisible = true }
             }
         }
     }

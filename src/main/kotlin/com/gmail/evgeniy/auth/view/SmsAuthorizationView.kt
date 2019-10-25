@@ -53,9 +53,9 @@ class SmsAuthorizationView : VerticalLayout(), BeforeEnterObserver {
         GlobalScope.launch {
             try {
                 AuthService.sendSmsForConfirmation(token)
-                doAfterAccess(ui) { Notification("смс отправлено", 3000).open() }
+                ui.doAfterAccess { Notification("смс отправлено", 3000).open() }
             } catch (e: CustomException) {
-                doAfterAccess(ui) { Notification(e.localizedMessage, 3000).open() }
+                ui.doAfterAccess { Notification(e.localizedMessage, 3000).open() }
             }
         }
     }
@@ -67,9 +67,9 @@ class SmsAuthorizationView : VerticalLayout(), BeforeEnterObserver {
             GlobalScope.launch {
                 if (AuthService.checkPassword(token, passwordField.value)) {
                     AuthService.updateToken(token)
-                    doAfterAccess(ui) { ui.get().navigate(MainView::class.java) }
+                    ui.doAfterAccess { ui.get().navigate(MainView::class.java) }
                 } else {
-                    doAfterAccess(ui) { passwordField.isInvalid = true }
+                    ui.doAfterAccess { passwordField.isInvalid = true }
                 }
             }
         }
