@@ -10,6 +10,7 @@ import com.vaadin.flow.component.html.Label
 import com.vaadin.flow.component.orderedlayout.FlexComponent
 import com.vaadin.flow.component.orderedlayout.VerticalLayout
 import com.vaadin.flow.component.page.Push
+import com.vaadin.flow.component.progressbar.ProgressBar
 import com.vaadin.flow.router.BeforeEvent
 import com.vaadin.flow.router.HasUrlParameter
 import com.vaadin.flow.router.Route
@@ -27,7 +28,31 @@ class StartView : VerticalLayout(), HasUrlParameter<String> {
 
     private var token: String? = null
 
-    init {
+    override fun setParameter(event: BeforeEvent, paramToken: String) {
+        val progressBar = showProgressBar()
+
+        GlobalScope.launch {
+            if (AuthService.isTokenExists(paramToken)) {
+                event.ui.session.setAttribute("token", paramToken)
+
+                if (AuthService.isTokenAlive(paramToken)) {
+                    event.ui.access {
+                        remove(progressBar)
+                        token = paramToken
+                        init()
+                    }
+                } else {
+                    AuthService.sendSmsForConfirmation(paramToken)
+                    event.ui.navigate(SmsAuthorizationView::class.java)
+                }
+            } else {
+                throw AccessDeniedException("Невергая ссылка")
+            }
+        }
+
+    }
+
+    private fun init() {
         birthdayField.isRequired = true
         birthdayField.width = "100%"
         errorLabel.isVisible = false
@@ -45,22 +70,16 @@ class StartView : VerticalLayout(), HasUrlParameter<String> {
         defaultHorizontalComponentAlignment = FlexComponent.Alignment.CENTER
     }
 
-    override fun setParameter(event: BeforeEvent, paramToken: String) {
-        GlobalScope.launch {
-            if (AuthService.isTokenExists(paramToken)) {
-                event.ui.session.setAttribute("token", paramToken)
+    private fun showProgressBar(): ProgressBar {
+        setSizeFull()
+        justifyContentMode = FlexComponent.JustifyContentMode.CENTER
+        defaultHorizontalComponentAlignment = FlexComponent.Alignment.CENTER
 
-                if (AuthService.isTokenAlive(paramToken)) {
-                    event.ui.access { token = paramToken }
-                } else {
-                    AuthService.sendSmsForConfirmation(paramToken)
-                    event.ui.navigate(SmsAuthorizationView::class.java)
-                }
-            } else {
-                throw AccessDeniedException("Невергая ссылка")
-            }
-        }
-
+        val progressBar = ProgressBar()
+        progressBar.isIndeterminate = true
+        progressBar.width = "60%"
+        add(progressBar)
+        return progressBar
     }
 
     private fun checkBirthday() {

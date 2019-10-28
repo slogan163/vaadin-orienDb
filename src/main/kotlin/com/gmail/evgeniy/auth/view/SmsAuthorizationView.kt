@@ -28,7 +28,7 @@ class SmsAuthorizationView : VerticalLayout(), BeforeEnterObserver {
 
     private lateinit var token: String
 
-    init {
+    private fun init() {
         passwordField.isClearButtonVisible = true
         passwordField.pattern = "^\\d{0,4}$"
         passwordField.isPreventInvalidInput = true
@@ -38,7 +38,6 @@ class SmsAuthorizationView : VerticalLayout(), BeforeEnterObserver {
         confirmBtn.addClickListener { onPasswordChanged(passwordField.value) }
         confirmBtn.width = "100%"
 
-        //todo: add style for resendLink
         resendLink.addClickListener { onResendClick() }
         resendLink.width = "100%"
 
@@ -77,5 +76,6 @@ class SmsAuthorizationView : VerticalLayout(), BeforeEnterObserver {
 
     override fun beforeEnter(event: BeforeEnterEvent) {
         token = event.ui.session.getAttribute("token") as String
+        init()
     }
 }
