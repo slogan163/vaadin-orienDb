@@ -89,14 +89,7 @@ class MainView : VerticalLayout(), BeforeEnterObserver {
     }
 
     override fun beforeEnter(event: BeforeEnterEvent) {
-        setSizeFull()
-        justifyContentMode = FlexComponent.JustifyContentMode.CENTER
-        defaultHorizontalComponentAlignment = FlexComponent.Alignment.CENTER
-
-        val progressBar = ProgressBar()
-        progressBar.isIndeterminate = true
-        progressBar.width = "60%"
-        add(progressBar)
+        val progressBar = showProgressBar()
 
         authorize(event.ui) { token: String ->
             val patientId: String = AuthService.getPatientId(token)
@@ -108,5 +101,17 @@ class MainView : VerticalLayout(), BeforeEnterObserver {
                 init()
             }
         }
+    }
+
+    private fun showProgressBar(): ProgressBar {
+        setSizeFull()
+        justifyContentMode = FlexComponent.JustifyContentMode.CENTER
+        defaultHorizontalComponentAlignment = FlexComponent.Alignment.CENTER
+
+        val progressBar = ProgressBar()
+        progressBar.isIndeterminate = true
+        progressBar.width = "60%"
+        add(progressBar)
+        return progressBar
     }
 }
